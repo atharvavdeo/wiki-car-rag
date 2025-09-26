@@ -3,35 +3,23 @@ import google.generativeai as genai
 import streamlit as st
 from functools import wraps
 from dotenv import load_dotenv
-
-# Load environment variables
 load_dotenv()
 
 def streamlit_cache_resource(func):
-    """Decorator that only applies resource caching when running in Streamlit context."""
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            # Check if we're in a Streamlit context
             if hasattr(st, 'cache_resource') and hasattr(st, 'session_state'):
                 return st.cache_resource(max_entries=1)(func)(*args, **kwargs)
             else:
                 return func(*args, **kwargs)
         except Exception as e:
-            # Fallback to non-cached version if Streamlit context fails
             print(f"Resource cache fallback: {e}")
             return func(*args, **kwargs)
     return wrapper
 
 @streamlit_cache_resource
 def setup_gemini():
-    """
-    Initialize and configure Google Gemini AI model.
-    
-    Returns:
-        GenerativeModel: Configured Gemini model instance
-        None: If configuration fails
-    """
     try:
         api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
@@ -44,8 +32,6 @@ def setup_gemini():
             
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('models/gemini-flash-latest')
-        
-        # Test the model with a simple request
         try:
             test_response = model.generate_content("Hello")
             if not test_response.text:
@@ -57,7 +43,6 @@ def setup_gemini():
             else:
                 print(error_msg)
             return None
-            
         return model
         
     except Exception as e:
@@ -69,17 +54,6 @@ def setup_gemini():
         return None
 
 def generate_gemini_response(model, query: str, context: dict):
-    """
-    Generate AI response using Gemini model and Wikipedia context.
-    
-    Args:
-        model: Configured Gemini model instance
-        query (str): User's question
-        context (dict): Wikipedia context data
-        
-    Returns:
-        tuple: (response_text, context) or (error_message, None)
-    """
     if not model:
         return "Gemini model is not available. Please check your API key configuration.", None
 
@@ -106,15 +80,6 @@ def generate_gemini_response(model, query: str, context: dict):
         return f"I encountered an error while generating a response. Please try again. ({error_msg})", None
 
 def _build_context_string(context: dict) -> str:
-    """
-    Build formatted context string from Wikipedia data.
-    
-    Args:
-        context (dict): Wikipedia context data
-        
-    Returns:
-        str: Formatted context string
-    """
     if not context:
         return ""
         
@@ -149,18 +114,7 @@ def _build_context_string(context: dict) -> str:
     return context_str
 
 def _extract_founding_info(summary: str) -> str:
-    """
-    Extract founding information from summary text.
-    
-    Args:
-        summary (str): Page summary text
-        
-    Returns:
-        str: Extracted founding information or empty string
-    """
     import re
-    
-    # Look for founding patterns in the text
     patterns = [
         r'founded\s+(?:in\s+)?(\d{4})',
         r'established\s+(?:in\s+)?(\d{4})',
@@ -185,16 +139,6 @@ def _extract_founding_info(summary: str) -> str:
     return ""
 
 def _build_prompt(query: str, context_str: str) -> str:
-    """
-    Build the complete prompt for Gemini AI.
-    
-    Args:
-        query (str): User's question
-        context_str (str): Formatted context
-        
-    Returns:
-        str: Complete prompt for AI
-    """
     return f"""You are an expert automotive assistant. Use the provided context to answer the user's question. Look carefully through the context for relevant information.
 
 CONTEXT:
