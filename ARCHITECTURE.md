@@ -1,4 +1,4 @@
-# Automotive RAG Assistant - Complete Architecture Documentation
+ Automotive RAG Assistant - Complete Architecture Documentation
 
 ## Table of Contents
 1. [Overview](#overview)
